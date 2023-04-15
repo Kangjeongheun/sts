@@ -40,12 +40,12 @@ public class UserController {
 		
 		HttpSession session = request.getSession();
 		ModelAndView mav = new ModelAndView();
-		
+
 		Map<String, String> map = new HashMap();
 		map.put("mbId", loginDTO.getId());
 		map.put("mbPw", loginDTO.getPw());
 		
-		
+	
 		int dupleCheck = userService.mbDuplicationCheck(map);
 		LoginDomain loginDomain = userService.mbGetId(map);
 		
@@ -57,10 +57,8 @@ public class UserController {
 		}
 
 
-		
 		String IP = CommonUtils.getClientIP(request);
-		
-		
+	
 		session.setAttribute("ip",IP);
 		session.setAttribute("id", loginDomain.getMbId());
 		session.setAttribute("mbLevel", loginDomain.getMbLevel());
