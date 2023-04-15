@@ -33,7 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
 	public SpringTemplateEngine templateEngine() {
 		var templateEngine = new SpringTemplateEngine();
 		templateEngine.setTemplateResolver(templateResolver());
-		templateEngine.addDialect(new LayoutDialect()); //dependency 미리 설정해놓음
+		templateEngine.addDialect(new LayoutDialect()); 
 		return templateEngine;
 	}
 	
