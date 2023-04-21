@@ -6,14 +6,9 @@
                 <a th:href="@{bdList}"> <span>SpringBoot</span> <span>STUDY</span></a>
            </div>
            
-           <div class="useInfo">
-               <span>genie</span>
-           </div>
-           
            <ul class="nav">
-               <th:block>
-
-                   <li class="on"><a class="menu1" href="#">맴버정보</a></li>
+              <th:block th:if="${session.mbLevel}==3"> 
+                   <li class="on"><a class="menu1" th:href="@{mbList(page=1)}">맴버정보</a></li>
                </th:block>
                <th:block>
                    <li class="on"><a class="menu1" th:href="@{bdList}">보드정보</a></li>

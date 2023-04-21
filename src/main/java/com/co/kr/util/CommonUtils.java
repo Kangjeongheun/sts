@@ -2,6 +2,10 @@ package com.co.kr.util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -14,13 +18,15 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Component
 public class CommonUtils {
-
+	
+	// 날짜
 	public static String currentTime() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
 		Date currentDate = new Date();
 		return sdf.format(currentDate);
 	}
 	
+	//get iP
 	public static String getClientIP(HttpServletRequest req) {
 		String ip = req.getHeader("X-Forwarded-For");
 		if(ip == null) {
@@ -45,7 +51,8 @@ public class CommonUtils {
 	};
 	
 	
-
+	
+	
 	public static void redirect(String alertText, String redirectPath, HttpServletResponse response) throws IOException {
 		response.setContentType("text/html; charset=UTF-8");
 		PrintWriter out = response.getWriter();
@@ -54,6 +61,30 @@ public class CommonUtils {
 		out.println("<script>alert('"+ alertText +"'); location.href='" + redirectPath + "'</script>");
 		out.flush();
 	}
+
+	public static String getLocalMacAddress() {
+		String result = "";
+		InetAddress ip;
+
+		try {
+			ip = InetAddress.getLocalHost();
+		   
+			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+			byte[] mac = network.getHardwareAddress();
+		   
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < mac.length; i++) {
+				sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+			}
+				result = sb.toString();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (SocketException e){
+			e.printStackTrace();
+		}
+		    
+		return result;
+	 }
 	
 
 }
