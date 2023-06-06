@@ -10,8 +10,13 @@
               <th:block th:if="${session.mbLevel}==3"> 
                    <li class="on"><a class="menu1" th:href="@{mbList(page=1)}">맴버정보</a></li>
                </th:block>
+               
                <th:block>
                    <li class="on"><a class="menu1" th:href="@{bdList}">보드정보</a></li>
+               </th:block>
+               
+               <th:block>
+                   <li class="on"><a class="menu1" th:href="@{bgList}">블로그 정보</a></li>
                </th:block>
            </ul>
        </div>

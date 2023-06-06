@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
@@ -37,6 +38,8 @@ import com.co.kr.vo.FileListVO;
 import groovyjarjarantlr4.v4.parse.ANTLRParser.throwsSpec_return;
 import lombok.extern.slf4j.Slf4j;
 
+import com.co.kr.domain.BlogFileDomain;
+import com.co.kr.domain.BlogListDomain;
 
 
 
@@ -85,7 +88,7 @@ public class FileListController {
 		return mav;
 	}
 	
-	@GetMapping("detail") //세부사항 확인하기 
+	@GetMapping("detail") 
 	public ModelAndView bdDetail(@ModelAttribute("fileListVO")FileListVO fileListVO, @RequestParam("bdSeq")String bdSep, HttpServletRequest request) throws IOException{
 		ModelAndView mav = new ModelAndView();
 		
@@ -186,6 +189,155 @@ public class FileListController {
 		return mav;
 		
 	}
+	
+	@PostMapping(value = "bgupload")
+	public ModelAndView bgUpload(FileListVO fileListVO, MultipartHttpServletRequest request, HttpServletRequest httpReq) throws IOException, ParseException {
+		ModelAndView mav = new ModelAndView();
+		int bgSeq = uploadService.bgfileProcess(fileListVO, request, httpReq);
+		fileListVO.setContent(""); //초기화
+		fileListVO.setTitle(""); //초기화
+		
+		
+		mav = bgSelectOneCall(fileListVO, String.valueOf(bgSeq),request);
+		mav.setViewName("blog/blogList.html");
+		return mav;
+	}
+	
+	public ModelAndView bgSelectOneCall(@ModelAttribute("fileListVO") FileListVO fileListVO, String bgSeq, HttpServletRequest request) {
+		ModelAndView mav = new ModelAndView();
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		HttpSession session = request.getSession();
+		
+		map.put("bgSeq", Integer.parseInt(bgSeq));
+		BlogListDomain blogListDomain =uploadService.bgSelectOne(map);
+		System.out.println("blogListDomain"+blogListDomain);
+		List<BlogFileDomain> fileList =  uploadService.bgSelectOneFile(map);
+		
+		for (BlogFileDomain list : fileList) {
+			String path = list.getUpFilePathbg().replaceAll("\\\\", "/");
+			list.setUpFilePathbg(path);
+		}
+		mav.addObject("bgdetail", blogListDomain);
+		mav.addObject("files", fileList);
+
+		
+		session.setAttribute("files", fileList);
+
+		return mav;
+	}
+		
+	@GetMapping("bgdetail")
+    public ModelAndView bgDetail(@ModelAttribute("fileListVO") FileListVO fileListVO, @RequestParam("bgSeq") String bgSeq, HttpServletRequest request) throws IOException {
+		ModelAndView mav = new ModelAndView();
+	
+		mav = bgSelectOneCall(fileListVO, bgSeq,request);
+		mav.setViewName("blog/blogList.html");
+		return mav;
+	}
+	
+
+
+	@GetMapping("bgedit")
+		public ModelAndView bgedit(FileListVO fileListVO, @RequestParam("bgSeq") String bgSeq, HttpServletRequest request) throws IOException {
+			ModelAndView mav = new ModelAndView();
+
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			HttpSession session = request.getSession();
+			
+			map.put("bgSeq", Integer.parseInt(bgSeq));
+			BlogListDomain blogListDomain =uploadService.bgSelectOne(map);
+			List<BlogFileDomain> fileList =  uploadService.bgSelectOneFile(map);
+			
+			for (BlogFileDomain list : fileList) {
+				String path = list.getUpFilePathbg().replaceAll("\\\\", "/");
+				list.setUpFilePathbg(path);
+			}
+
+			fileListVO.setSeq(blogListDomain.getBgSeq());
+			fileListVO.setContent(blogListDomain.getBgContent());
+			fileListVO.setTitle(blogListDomain.getBgTitle());
+			fileListVO.setIsEdit("bgedit");  
+		
+			mav.addObject("bgdetail", blogListDomain);
+			mav.addObject("files", fileList);
+			mav.addObject("fileLen",fileList.size());
+			
+			mav.setViewName("blog/blogEditList.html");
+			return mav;
+		}
+	
+	
+
+	@PostMapping("bgeditSave")
+		public ModelAndView bgeditSave(@ModelAttribute("fileListVO") FileListVO fileListVO, MultipartHttpServletRequest request, HttpServletRequest httpReq) throws IOException {
+			ModelAndView mav = new ModelAndView();
+			
+			
+			uploadService.bgfileProcess(fileListVO, request, httpReq);
+			
+			mav = bgSelectOneCall(fileListVO, fileListVO.getSeq(),request);
+			fileListVO.setContent(""); //초기화
+			fileListVO.setTitle(""); //초기화
+			mav.setViewName("blog/blogList.html");
+			return mav;
+		}
+	
+	@GetMapping("bgremove")
+	public ModelAndView bgRemove(@RequestParam("bgSeq") String bgSeq, HttpServletRequest request) throws IOException {
+		ModelAndView mav = new ModelAndView();
+		
+		HttpSession session = request.getSession();
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		List<BlogFileDomain> fileList = null;
+		if(session.getAttribute("files") != null) {						
+			fileList = (List<BlogFileDomain>) session.getAttribute("files");
+		}
+
+		map.put("bgSeq", Integer.parseInt(bgSeq));
+		
+		
+		uploadService.bgContentRemove(map);
+
+		for (BlogFileDomain list : fileList) {
+			list.getUpFilePathbg();
+			Path filePath = Paths.get(list.getUpFilePathbg());
+	 
+	        try {
+	        	
+	            
+	            Files.deleteIfExists(filePath); 
+							uploadService.bgFileRemove(list);
+				
+	        } catch (DirectoryNotEmptyException e) {
+							throw RequestException.fire(Code.E404, "디렉토리가 존재하지 않습니다", HttpStatus.NOT_FOUND);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+		}
+
+	
+		session.removeAttribute("files"); 
+		mav = bgListCall();
+		mav.setViewName("blog/blogList.html");
+		
+		return mav;
+	}
+
+
+public ModelAndView bgListCall() {
+	ModelAndView mav = new ModelAndView();
+	List<BlogListDomain> items = uploadService.blogList();
+	mav.addObject("items", items);
+	return mav;
+}
+
+
+
+	
+
+	
+	
+	
 	
 }
 	

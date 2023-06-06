@@ -23,6 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.co.kr.code.Code;
+import com.co.kr.domain.BlogContentDomain;
+import com.co.kr.domain.BlogFileDomain;
+import com.co.kr.domain.BlogListDomain;
 import com.co.kr.domain.BoardContentDomain;
 import com.co.kr.domain.BoardFileDomain;
 import com.co.kr.domain.BoardListDomain;
@@ -43,16 +46,16 @@ public class UploadServiceImple implements UploadService {
 	
 	@Override
 	public List<BoardListDomain> boardList() {
-		// TODO Auto-generated method stub
+		
 		return uploadMapper.boardList();
 	}
 
 	@Override
 	public int fileProcess(FileListVO fileListVO, MultipartHttpServletRequest request, HttpServletRequest httpReq) {
-		//session 생성
+		
 		HttpSession session = httpReq.getSession();
 		
-		//content domain 생성 
+	
 		BoardContentDomain boardContentDomain = BoardContentDomain.builder()
 				.mbId(session.getAttribute("id").toString())
 				.bdTitle(fileListVO.getTitle())
@@ -62,26 +65,25 @@ public class UploadServiceImple implements UploadService {
 				if(fileListVO.getIsEdit() != null) {
 					boardContentDomain.setBdSeq(Integer.parseInt(fileListVO.getSeq()));
 					System.out.println("수정업데이트");
-					// db 업데이트
+					
 					uploadMapper.bdContentUpdate(boardContentDomain);
 				}else {	
-					// db 인서트
+					
 					uploadMapper.contentUpload(boardContentDomain);
 					System.out.println(" db 인서트");
 
 				}
 				
-				// file 데이터 db 저장시 쓰일 값 추출
+				
 				int bdSeq = boardContentDomain.getBdSeq();
 				String mbId = boardContentDomain.getMbId();
 				
-				//파일객체 담음
+				
 				List<MultipartFile> multipartFiles = request.getFiles("files");
 				
 				
-				// 게시글 수정시 파일관련 물리저장 파일, db 데이터 삭제 
-				if(fileListVO.getIsEdit() != null) { // 수정시 
-
+			
+				if(fileListVO.getIsEdit() != null) { 
 	
 					List<BoardFileDomain> fileList = null;
 					
@@ -89,7 +91,7 @@ public class UploadServiceImple implements UploadService {
 					
 					for (MultipartFile multipartFile : multipartFiles) {
 						
-						if(!multipartFile.isEmpty()) {   // 수정시 새로 파일 첨부될때 세션에 담긴 파일 지우기
+						if(!multipartFile.isEmpty()) {  
 							
 							
 							if(session.getAttribute("files") != null) {	
@@ -102,11 +104,9 @@ public class UploadServiceImple implements UploadService {
 							 
 							        try {
 							        	
-							            // 파일 삭제
-							            Files.deleteIfExists(filePath); // notfound시 exception 발생안하고 false 처리
-							            //삭제 
-										bdFileRemove(list); //데이터 삭제
-										
+							            
+							            Files.deleteIfExists(filePath);
+										bdFileRemove(list); 
 							        } catch (DirectoryNotEmptyException e) {
 										throw RequestException.fire(Code.E404, "디렉토리가 존재하지 않습니다", HttpStatus.NOT_FOUND);
 							        } catch (IOException e) {
@@ -126,9 +126,7 @@ public class UploadServiceImple implements UploadService {
 				}
 				
 				
-				///////////////////////////// 새로운 파일 저장 ///////////////////////
 				
-				// 저장 root 경로만들기
 				Path rootPath = Paths.get(new File("C://").toString(),"upload", File.separator).toAbsolutePath().normalize();			
 				File pathCheck = new File(rootPath.toString());
 				
@@ -139,8 +137,7 @@ public class UploadServiceImple implements UploadService {
 	
 				for (MultipartFile multipartFile : multipartFiles) {
 					
-					if(!multipartFile.isEmpty()) {  // 파일 있을때 
-						
+					if(!multipartFile.isEmpty()) {  
 						
 						String originalFileExtension;
 						String contentType = multipartFile.getContentType();
@@ -198,7 +195,7 @@ public class UploadServiceImple implements UploadService {
 				}
 				
 		
-				return bdSeq; // 저장된 게시판 번호
+				return bdSeq; 
 	}
 
 	@Override
@@ -223,4 +220,197 @@ public class UploadServiceImple implements UploadService {
 		return uploadMapper.boardSelectOneFile(map);
 	}
 
-}
+	@Override
+	public List<BlogListDomain> blogList() {
+		
+		return uploadMapper.blogList();
+	}
+
+	
+	
+	
+	
+	
+	//blog 파일 저장
+	@Override
+	public int bgfileProcess(FileListVO fileListVO, MultipartHttpServletRequest request, HttpServletRequest httpReq) {
+		HttpSession session = httpReq.getSession();
+		
+		
+		BlogContentDomain blogContentDomain = BlogContentDomain.builder()
+				.mbId(session.getAttribute("id").toString())
+				.bgTitle(fileListVO.getTitle())
+				.bgContent(fileListVO.getContent())
+				.build();
+		
+				if(fileListVO.getIsEdit() != null) {
+					blogContentDomain.setBgSeq(Integer.parseInt(fileListVO.getSeq()));
+					System.out.println("수정업데이트");
+				
+					uploadMapper.bgContentUpdate(blogContentDomain);
+				}else {	
+					
+					uploadMapper.bgcontentUpload(blogContentDomain);
+					System.out.println(" db 인서트");
+				}
+				
+				
+				int bgSeq = blogContentDomain.getBgSeq();
+				String mbId = blogContentDomain.getMbId();
+				
+				List<MultipartFile> multipartFiles = request.getFiles("files");
+				
+				
+				if(fileListVO.getIsEdit() != null) { // 수정시 
+
+	
+					List<BlogFileDomain> fileList = null;
+					
+					
+					
+					for (MultipartFile multipartFile : multipartFiles) {
+						
+						if(!multipartFile.isEmpty()) {   // 수정시 새로 파일 첨부될때 세션에 담긴 파일 지우기
+							
+							
+							if(session.getAttribute("files") != null) {	
+
+								fileList = (List<BlogFileDomain>) session.getAttribute("files");
+								
+								for (BlogFileDomain list : fileList) {
+									list.getUpFilePathbg();
+									Path filePath = Paths.get(list.getUpFilePathbg());
+							 
+							        try {
+							        	
+							           
+							            Files.deleteIfExists(filePath); 
+							          
+										bgFileRemove(list); 
+										
+							        } catch (DirectoryNotEmptyException e) {
+										throw RequestException.fire(Code.E404, "디렉토리가 존재하지 않습니다", HttpStatus.NOT_FOUND);
+							        } catch (IOException e) {
+							            e.printStackTrace();
+							        }
+								}
+								
+
+							}
+							
+							
+						}
+
+					}
+					
+					
+				}
+				
+				
+				
+				Path rootPath = Paths.get(new File("C://").toString(),"upload", File.separator).toAbsolutePath().normalize();			
+				File pathCheck = new File(rootPath.toString());
+				
+				
+				if(!pathCheck.exists()) pathCheck.mkdirs();
+				
+				
+	
+				for (MultipartFile multipartFile : multipartFiles) {
+					
+					if(!multipartFile.isEmpty()) {  
+						
+						
+						String originalFileExtensionbg;
+						String contentTypebg = multipartFile.getContentType();
+						String origFilenamebg = multipartFile.getOriginalFilename();
+						
+				
+						if(ObjectUtils.isEmpty(contentTypebg)){
+							break;
+						}else { 
+							if(contentTypebg.contains("image/jpeg")) {
+								originalFileExtensionbg = ".jpg";
+							}else if(contentTypebg.contains("image/png")) {
+								originalFileExtensionbg = ".png";
+							}else {
+								break;
+							}
+						}
+						
+						String uuid = UUID.randomUUID().toString();
+						String current = CommonUtils.currentTime();
+						String newFileName = uuid + current + originalFileExtensionbg;
+						
+						//최종경로까지 지정
+						Path targetPath = rootPath.resolve(newFileName);
+						
+						File file = new File(targetPath.toString());
+						
+						try {
+							
+							multipartFile.transferTo(file);
+							
+							file.setWritable(true);
+							file.setReadable(true);
+							
+							
+							//파일 domain 생성 
+							BlogFileDomain blogFileDomain = BlogFileDomain.builder()
+									.bgSeq(bgSeq)
+									.mbId(mbId)
+									.upOriginalFileNamebg(origFilenamebg)
+									.upNewFileNamebg("resources/upload/"+newFileName) // WebConfig에 동적 이미지 폴더 생성 했기때문
+									.upFilePathbg(targetPath.toString())
+									.upFileSizebg((int)multipartFile.getSize())
+									.build();
+							
+							
+								uploadMapper.bgfileUpload(blogFileDomain);
+								System.out.println("upload done");
+							
+						} catch (IOException e) {
+							throw RequestException.fire(Code.E404, "잘못된 업로드 파일", HttpStatus.NOT_FOUND);
+						}
+					}
+
+				}
+				
+		
+				return bgSeq; 
+	}
+	
+	@Override
+	public void bgContentRemove(HashMap<String, Object> map) {
+		uploadMapper.bgContentRemove(map);
+		
+	}
+
+
+	@Override
+	public void bgFileRemove(BlogFileDomain blogFileDomain) {
+		uploadMapper.bgFileRemove(blogFileDomain);		
+	}
+
+	@Override
+	public BlogListDomain bgSelectOne(HashMap<String, Object> map) {
+		return uploadMapper.bgSelectOne(map);
+	}
+
+	@Override
+	public List<BlogFileDomain> bgSelectOneFile(HashMap<String, Object> map) {
+		return uploadMapper.bgSelectOneFile(map);
+	}
+
+	
+
+	
+
+	
+
+	
+		
+	}
+	
+	
+

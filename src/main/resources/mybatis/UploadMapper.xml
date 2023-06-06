@@ -9,6 +9,8 @@
 	  FROM jsp.board order by bd_update_at desc
 	</select>
 	
+	
+	
 	<!-- content insert -->
 	<insert id="contentUpload" parameterType="com.co.kr.domain.BoardContentDomain"
 	useGeneratedKeys="true"
@@ -89,6 +91,107 @@
     SELECT bd_seq, mb_id, up_original_file_name, up_new_file_name, up_file_path, up_file_size
     FROM jsp.view_board where bd_seq = #{bdSeq}
 </select>
+
+
+	<select id="mbSelectList" resultType="com.co.kr.domain.LoginDomain" parameterType="hashMap">
+	    SELECT * FROM jsp.member WHERE mb_seq=#{mbSeq}
+	</select>
+	
+	
+	
+	
+	<!--BLOG PART -->
+	<!--select all Blog-->
+	<select id="blogList" resultType="com.co.kr.domain.BlogListDomain">
+	  SELECT bg_seq, mb_id, bg_title, bg_content, bg_create_at, bg_update_at
+	  FROM jsp.blog order by bg_update_at desc
+	</select>	
+	
+
+	<insert id="bgcontentUpload" parameterType="com.co.kr.domain.BlogContentDomain"
+	useGeneratedKeys="true"
+        keyProperty="bgSeq" keyColumn="bg_seq">
+	
+        INSERT INTO jsp.blog (
+            mb_id,   
+						bg_title,                         
+						bg_content  
+        )
+        VALUES (
+            #{mbId},
+            #{bgTitle},
+            #{bgContent}
+        )
+	</insert>
+	
+
+	<insert id="bgfileUpload" parameterType="com.co.kr.domain.BlogFileDomain">
+        INSERT INTO jsp.blog_files (
+            bg_seq,
+            mb_id,   
+            up_original_file_name_bg,                         
+            up_new_file_name_bg,                      
+            up_file_path_bg,                                   
+            up_file_size_bg
+        )
+        VALUES (
+            #{bgSeq},
+            #{mbId},
+            #{upOriginalFileNamebg},
+            #{upNewFileNamebg},
+            #{upFilePathbg},
+            #{upFileSizebg}
+        )
+    </insert>
+
+		
+    <update id="bgContentUpdate" parameterType="com.co.kr.domain.BlogContentDomain">
+        UPDATE jsp.blog SET
+                bg_seq=#{bgSeq},
+                mb_id=#{mbId},
+                bg_title=#{bgTitle},
+                bg_content=#{bgContent}, 
+                bg_update_at=now()  
+        WHERE bg_seq=#{bgSeq}
+    </update>
+
+    <!-- file update -->
+    <update id="bgFileUpdate" parameterType="com.co.kr.domain.BlogFileDomain">
+        UPDATE jsp.blog_files SET
+                bg_seq=#{bgSeq},
+                mb_id=#{mbId},
+                up_original_file_name_bg=#{upOriginalFileNamebg},
+                up_new_file_name_bg=#{upNewFileNamebg}, 
+                up_file_path_bg=#{upFilePathbg},
+                up_file_size_bg=#{upFileSizebg}
+        WHERE bg_seq=#{bgSeq}
+    </update>
+
+    <delete id="bgContentRemove" parameterType="hashMap">
+       DELETE FROM jsp.blog WHERE bg_seq=#{bgSeq}
+    </delete>
+	<!-- file delete -->
+    <delete id="bgFileRemove" parameterType="com.co.kr.domain.BlogFileDomain">
+	    DELETE FROM jsp.blog_files WHERE up_new_file_name_bg = #{upNewFileNamebg}
+	</delete>
+	
+	
+<select id="bgSelectOne" resultType="com.co.kr.domain.BlogListDomain" parameterType="map">
+    SELECT bg_seq, mb_id, bg_title, bg_content, bg_create_at, bg_update_at
+    FROM jsp.blog where bg_seq = #{bgSeq}
+</select>
+
+<!-- file -->
+<select id="bgSelectOneFile" resultType="com.co.kr.domain.BlogFileDomain" parameterType="map">
+    SELECT bg_seq, mb_id, up_original_file_name_bg, up_new_file_name_bg, up_file_path_bg, up_file_size_bg
+    FROM jsp.view_blog where bg_seq = #{bgSeq}
+</select>
+	
+	
+	
+
+
+
 	
 
 </mapper>

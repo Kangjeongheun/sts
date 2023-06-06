@@ -19,14 +19,14 @@ import org.springframework.web.servlet.ModelAndView;
 @Component
 public class CommonUtils {
 	
-	// 날짜
+	
 	public static String currentTime() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
 		Date currentDate = new Date();
 		return sdf.format(currentDate);
 	}
 	
-	//get iP
+	
 	public static String getClientIP(HttpServletRequest req) {
 		String ip = req.getHeader("X-Forwarded-For");
 		if(ip == null) {

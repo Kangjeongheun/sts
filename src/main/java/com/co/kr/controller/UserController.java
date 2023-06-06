@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.co.kr.domain.BlogListDomain;
 import com.co.kr.domain.BoardListDomain;
 import com.co.kr.domain.LoginDomain;
 import com.co.kr.service.UploadService;
@@ -57,7 +58,7 @@ public class UserController {
 		
 		if(dupleCheck == 0) {  
 			String alertText = "없는 아이디이거나 패스워드가 잘못되었습니다. 가입해주세요";
-			String redirectPath = "signin";
+			String redirectPath = "/main/signin"; 
 			CommonUtils.redirect(alertText, redirectPath, response);
 			return mav;
 		}
@@ -94,6 +95,15 @@ public class UserController {
 		return mav; 
 	};
 	
+	@RequestMapping(value ="bgList")
+	public ModelAndView bgList() { 
+		ModelAndView mav = new ModelAndView();
+		List<BlogListDomain> items = uploadService.blogList();
+		System.out.println("items ==> "+ items);
+		mav.addObject("items", items);
+		mav.setViewName("blog/blogList.html");
+		return mav; 
+	};
 	
 	
 	
@@ -109,9 +119,9 @@ public class UserController {
 		String paramPage = request.getParameter("page");
 		
 		
-		if(paramPage != null) { //param 있으면
+		if(paramPage != null) { 
 			session.setAttribute("page", paramPage);
-		}else if(page != null) { //session 있으면
+		}else if(page != null) { 
 			session.setAttribute("page", page);
 		}else {
 			session.setAttribute("page", "1");
@@ -269,7 +279,7 @@ public class UserController {
 
 		if(dupleCheck > 0) { 
 			String alertText = "중복이거나 유효하지 않은 접근입니다";
-			String redirectPath = "logout"; //아직 메인이없어서 logout방향으로 해둠
+			String redirectPath = "logout"; 
 			System.out.println(loginVO.getAdmin());
 			if(loginVO.getAdmin() != null) {
 				redirectPath = "/main/mbList?page=";
@@ -346,4 +356,6 @@ public class UserController {
 		mav.setViewName("index.html");
 		return mav;
 	}
+	
+	
 }
